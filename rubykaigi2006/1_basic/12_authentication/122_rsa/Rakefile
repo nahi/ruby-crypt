@@ -1,0 +1,19 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+CLEAN.include('*/*.bin')
+CLEAN.include('*/*.pem')
+CLEAN.include('*/*.txt')
+
+task :default => ['privkey.pem', 'pubkey.pem'] do
+  cp 'privkey.pem', 'alice_sign'
+  cp 'pubkey.pem', 'bob_verify'
+end
+
+file 'privkey.pem' do
+  load 'generatekey.rb'
+end
+
+file 'pubkey.pem' do
+  load 'generatekey.rb'
+end

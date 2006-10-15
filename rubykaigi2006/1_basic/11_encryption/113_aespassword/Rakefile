@@ -1,0 +1,13 @@
+require 'rake/clean'
+
+CLEAN.include('*.bin')
+CLEAN.include('password.txt')
+
+task :default => 'password.txt'
+
+file 'password.txt' do
+  puts 'type password'
+  File.open('password.txt', 'wb') do |file|
+    file << STDIN.gets
+  end
+end

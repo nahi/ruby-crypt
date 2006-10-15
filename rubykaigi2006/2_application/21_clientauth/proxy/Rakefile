@@ -1,0 +1,16 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+CLEAN.include('../host/*.pem')
+
+task :default => 'pubkey.pem' do
+  cp 'pubkey.pem', '../host'
+end
+
+file 'privkey.pem' do
+  load 'generatekey.rb'
+end
+
+file 'pubkey.pem' do
+  load 'generatekey.rb'
+end

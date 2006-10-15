@@ -1,0 +1,30 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+CLEAN.include('../proxy/pubkey.pem.sig')
+CLEAN.include('nglist.txt')
+CLEAN.include('../proxy/masterpubkey.pem')
+
+task :default => [
+  'masterprivkey.pem', '../proxy/pubkey.pem.sig', 'nglist.txt',
+  '../proxy/masterpubkey.pem']
+
+file '../proxy/masterpubkey.pem' => 'masterpubkey.pem' do
+  cp 'masterpubkey.pem', '../proxy/masterpubkey.pem'
+end
+
+file 'nglist.txt' do
+  File.open('nglist.txt', 'w') {}
+end
+
+file 'masterprivkey.pem' do
+  load 'generatemasterkey.rb'
+end
+
+file 'masterpubkey.pem' do
+  load 'generatemasterkey.rb'
+end
+
+file '../proxy/pubkey.pem.sig' => 'masterprivkey.pem' do
+  ruby 'generatesig.rb ../proxy/pubkey.pem'
+end

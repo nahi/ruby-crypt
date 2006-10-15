@@ -1,0 +1,9 @@
+require 'rake/clean'
+
+CLEAN.include('*.bin')
+
+task :default => 'seckey.bin'
+
+file 'seckey.bin' do
+  load 'generatekey.rb'
+end

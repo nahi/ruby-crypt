@@ -1,0 +1,18 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+CLEAN.include('*.sig')
+
+task :default => ['privkey.pem', 'pubkey.pem']
+
+file 'privkey.pem' do
+  load 'generatekey.rb'
+end
+
+file 'pubkey.pem' do
+  load 'generatekey.rb'
+end
+
+task :selfsig do
+  ruby 'generateselfsig.rb pubkey.pem'
+end

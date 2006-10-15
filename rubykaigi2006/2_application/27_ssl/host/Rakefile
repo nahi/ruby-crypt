@@ -1,0 +1,9 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+
+task :default => 'csr.pem'
+
+file 'csr.pem' do
+  ruby 'gen_key_and_certrequest.rb /C=org/O=ctor/OU=development/CN=server1'
+end

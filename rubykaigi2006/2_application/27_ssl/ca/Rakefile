@@ -1,0 +1,20 @@
+require 'rake/clean'
+
+CLEAN.include('cacert.pem')
+CLEAN.include('crl')
+CLEAN.include('newcerts')
+CLEAN.include('private')
+CLEAN.include('serial')
+
+task :initca do
+  ruby 'init_ca.rb CA1'
+  ruby 'gen_crl.rb'
+end
+
+task :servercert do
+  ruby 'gen_cert.rb --type server --out ../host/servercert.pem ../host/csr.pem'
+end
+
+task :clientcert do
+  ruby 'gen_cert.rb --type client --out ../proxy/clientcert.pem ../proxy/csr.pem'
+end

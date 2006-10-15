@@ -1,0 +1,14 @@
+require 'rake/clean'
+
+CLEAN.include('*.bin')
+CLEAN.include('*/*.bin')
+CLEAN.include('*/*.txt')
+
+task :default => 'seckey.bin' do
+  cp 'seckey.bin', 'alice_sign'
+  cp 'seckey.bin', 'bob_verify'
+end
+
+file 'seckey.bin' do
+  load 'generatekey.rb'
+end

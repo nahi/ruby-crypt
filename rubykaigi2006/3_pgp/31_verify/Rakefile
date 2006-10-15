@@ -1,0 +1,16 @@
+require 'rake/clean'
+
+CLEAN.include('plain.txt')
+CLEAN.include('*.asc')
+
+task :default => 'pubkey.asc'
+task :sign => 'plain.txt.asc'
+
+file 'pubkey.asc' do
+  sh 'gpg --export --armor nahi@ctor.org > pubkey.asc'
+end
+
+file 'plain.txt.asc' do
+  # --openpgp is for getting V4 packet
+  sh 'gpg --openpgp --sign --detach-sign --armor plain.txt'
+end

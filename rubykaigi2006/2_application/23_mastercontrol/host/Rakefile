@@ -1,0 +1,18 @@
+require 'rake/clean'
+
+CLEAN.include('*.pem')
+CLEAN.include('../proxy/pubkey.pem.sig')
+
+task :default => ['masterprivkey.pem', '../proxy/pubkey.pem.sig']
+
+file 'masterprivkey.pem' do
+  load 'generatemasterkey.rb'
+end
+
+file 'masterpubkey.pem' do
+  load 'generatemasterkey.rb'
+end
+
+file '../proxy/pubkey.pem.sig' => 'masterprivkey.pem' do
+  ruby 'generatesig.rb ../proxy/pubkey.pem'
+end

@@ -1,0 +1,1 @@
+../../25_noreplay/host/generatemasterkey.rb

@@ -1,0 +1,1 @@
+../../23_mastercontrol/host/generatemasterkey.rb

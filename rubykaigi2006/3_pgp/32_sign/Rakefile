@@ -1,0 +1,13 @@
+require 'rake/clean'
+
+CLEAN.include('plain.txt')
+CLEAN.include('*.asc')
+
+task :default do
+  sh 'gpg --export --armor nahi@ctor.org > pubkey.asc'
+end
+
+task :exportsecretkey do
+  puts '!! WARNING: you should not export secret key !!'
+  sh 'gpg --export-secret-key --armor nahi@ctor.org > privkey.asc'
+end

@@ -1,0 +1,1 @@
+../../24_nglist/host/generatemasterkey.rb
