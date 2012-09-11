@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'openssl'
-require 'ca_config'
+require './ca_config'
 
 include OpenSSL
 
@@ -49,7 +49,7 @@ ext4 = ef.create_extension("keyUsage", key_usage.join(","), true)
 cert.extensions = [ext1, ext2, ext3, ext4]
 ext0 = ef.create_extension("authorityKeyIdentifier", "keyid:always,issuer:always")
 cert.add_extension(ext0)
-cert.sign(keypair, Digest::SHA1.new)
+cert.sign(keypair, OpenSSL::Digest::SHA1.new)
 
 keypair_file = CAConfig::KEYPAIR_FILE
 puts "Writing keypair."

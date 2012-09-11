@@ -19,7 +19,7 @@ class HostEncrypt
 
     @logger = Logger.new(STDERR)
     @server = WEBrick::GenericServer.new(
-      :Port => 1235, :Logger => @logger)
+      :Port => 1234, :Logger => @logger)
   end
 
   def start
@@ -34,6 +34,7 @@ class HostEncrypt
         pubkey = Marshal.load(sock)
         pubsig = Marshal.load(sock)
         ciphertext = Marshal.load(sock)
+        p [:request, ciphertext]
         cipherkey = Marshal.load(sock)
         sourcesig = Marshal.load(sock)
         sock.close_read

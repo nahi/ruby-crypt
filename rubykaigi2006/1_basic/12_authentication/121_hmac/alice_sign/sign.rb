@@ -4,12 +4,9 @@ require 'openssl'
 plain = ARGF.read
 
 # load SECRET key
-key = File.read("seckey.bin")
+key = File.binread("seckey.bin")
 
 # sign
-# CAUTION: digester must be an instance of
-#   ::OpenSSL::Digest::* not ::Digest::* even if
-#   openssl is loaded.
 digester = OpenSSL::Digest::SHA1.new
 sig = OpenSSL::HMAC.digest(digester, key, plain)
 

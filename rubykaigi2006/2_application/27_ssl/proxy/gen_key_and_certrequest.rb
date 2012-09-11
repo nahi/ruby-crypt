@@ -33,7 +33,7 @@ req = X509::Request.new
 req.version = 0
 req.subject = name
 req.public_key = keypair.public_key
-req.sign(keypair, Digest::MD5.new)
+req.sign(keypair, OpenSSL::Digest::MD5.new)
 
 puts "Writing #{csrout}..."
 File.open(csrout, "w") do |f|

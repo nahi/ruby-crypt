@@ -1,14 +1,13 @@
 require 'webrick/ssl'
 require 'openssl'
+require '../sslsocket_fix'
 require 'logger'
 
 class HostSsl
   def initialize
     logger = Logger.new(STDERR)
-    servercert = OpenSSL::X509::Certificate.new(
-      File.read("servercert.pem"))
-    serverprivkey = OpenSSL::PKey::RSA.new(
-      File.read("privkey.pem"))
+    servercert = OpenSSL::X509::Certificate.new(File.read("servercert.pem"))
+    serverprivkey = OpenSSL::PKey::RSA.new(File.read("privkey.pem"))
     ca_file = '../ca/cacert.pem'
     # CAUTION: crl_file is not reloaded until the
     #   next server startup
@@ -16,10 +15,8 @@ class HostSsl
 
     store = OpenSSL::X509::Store.new
     store.add_file(ca_file)
-    store.add_crl(
-      OpenSSL::X509::CRL.new(File.read(crl_file)))
-    store.flags = OpenSSL::X509::V_FLAG_CRL_CHECK |
-      OpenSSL::X509::V_FLAG_CRL_CHECK_ALL
+    store.add_crl(OpenSSL::X509::CRL.new(File.read(crl_file)))
+    store.flags = OpenSSL::X509::V_FLAG_CRL_CHECK | OpenSSL::X509::V_FLAG_CRL_CHECK_ALL
 
     @server = WEBrick::GenericServer.new(
       :X_SSLCertificateStoreCrlFile => crl_file,

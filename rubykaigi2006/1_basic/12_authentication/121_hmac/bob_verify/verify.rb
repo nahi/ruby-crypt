@@ -1,11 +1,11 @@
 require 'openssl'
 
 # load SECRET key
-key = File.read("seckey.bin")
+key = File.binread("seckey.bin")
 
 # load text and sig
-plain = File.read("plain.txt")
-sig = File.read("plain.sig.bin")
+plain = File.binread("../alice_sign/plain.txt")
+sig = File.binread("../alice_sign/plain.sig.bin")
 
 # self sign calculation
 digester = OpenSSL::Digest::SHA1.new

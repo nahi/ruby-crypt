@@ -3,8 +3,7 @@ require 'openssl'
 
 class ProxyClientAuth
   def initialize
-    @signkey =
-      OpenSSL::PKey::RSA.new(File.read("privkey.pem"))
+    @signkey = OpenSSL::PKey::RSA.new(File.read("privkey.pem"))
   end
 
   def evaluate(source)

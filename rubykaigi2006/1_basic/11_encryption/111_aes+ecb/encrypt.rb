@@ -1,7 +1,7 @@
 require 'openssl'
 
 # load SECRET key
-key = File.read("seckey.bin")
+key = File.binread("seckey.bin")
 
 # create AES engine
 # 128/192/256 must match key length (bits)

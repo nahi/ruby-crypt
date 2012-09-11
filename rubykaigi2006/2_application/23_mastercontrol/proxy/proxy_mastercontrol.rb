@@ -4,11 +4,9 @@ require '../marshallablersakey'
 
 class ProxyMasterControl
   def initialize
-    @pubkey =
-      OpenSSL::PKey::RSA.new(File.read("pubkey.pem"))
+    @pubkey = OpenSSL::PKey::RSA.new(File.read("pubkey.pem"))
     @pubsig = File.read("pubkey.pem.sig")
-    @signkey =
-      OpenSSL::PKey::RSA.new(File.read("privkey.pem"))
+    @signkey = OpenSSL::PKey::RSA.new(File.read("privkey.pem"))
   end
 
   def evaluate(source)

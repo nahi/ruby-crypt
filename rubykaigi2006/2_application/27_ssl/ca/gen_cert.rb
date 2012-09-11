@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'openssl'
-require 'ca_config'
+require './ca_config'
 require 'fileutils'
-require 'getopts'
+require 'optparse'
 
 include OpenSSL
 
@@ -13,10 +13,21 @@ def usage
   exit
 end
 
-getopts nil, 'type:client', 'out:', 'force'
+cert_type = nil
+out_file = 'cert.pem'
+force = false
+OptionParser.new { |opts|
+  opts.on("-t TYPE", "--type TYPE") do |v|
+    cert_type = v
+  end
+  opts.on("-o OUT", "--out OUT") do |v|
+    out_file = v
+  end
+  opts.on(nil, "--force") do
+    force = true
+  end
+}.parse!
 
-cert_type = $OPT_type
-out_file = $OPT_out || 'cert.pem'
 csr_file = ARGV.shift or usage
 ARGV.empty? or usage
 
@@ -31,7 +42,7 @@ if csr.public_key.n.num_bits > CAConfig::CERT_KEY_LENGTH_MAX
   raise "Key length too long"
 end
 if csr.subject.to_a[0, CAConfig::NAME.size] != CAConfig::NAME
-  unless $OPT_force
+  unless force
     p csr.subject.to_a
     p CAConfig::NAME
     puts "DN does not match"
@@ -111,7 +122,7 @@ ex << ef.create_extension("extendedKeyUsage", ext_key_usage.join(",")) unless ex
 ex << ef.create_extension("crlDistributionPoints", CAConfig::CDP_LOCATION) if CAConfig::CDP_LOCATION
 ex << ef.create_extension("authorityInfoAccess", "OCSP;" << CAConfig::OCSP_LOCATION) if CAConfig::OCSP_LOCATION
 cert.extensions = ex
-cert.sign(ca_keypair, Digest::SHA1.new)
+cert.sign(ca_keypair, OpenSSL::Digest::SHA1.new)
 
 # For backup
 

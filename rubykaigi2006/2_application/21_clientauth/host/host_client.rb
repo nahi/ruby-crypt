@@ -10,7 +10,7 @@ class HostClient
 
     @logger = Logger.new(STDERR)
     @server = WEBrick::GenericServer.new(
-      :Port => 1235, :Logger => @logger)
+      :Port => 1234, :Logger => @logger)
   end
 
   def start

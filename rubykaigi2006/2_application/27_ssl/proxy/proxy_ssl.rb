@@ -1,12 +1,11 @@
 require 'socket'
 require 'openssl'
+require '../sslsocket_fix'
 
 class ProxySsl
   def initialize
-    @clientcert = OpenSSL::X509::Certificate.new(
-      File::read("clientcert.pem"))
-    @clientprivkey = OpenSSL::PKey::RSA.new(
-      File::read("privkey.pem"))
+    @clientcert = OpenSSL::X509::Certificate.new(File::read("clientcert.pem"))
+    @clientprivkey = OpenSSL::PKey::RSA.new(File::read("privkey.pem"))
     @ca_file = '../ca/cacert.pem'
     @crl_file = '../ca/crl/ctor.pem'
     @ciphers = 'ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH'

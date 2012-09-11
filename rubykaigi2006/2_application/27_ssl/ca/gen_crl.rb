@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'openssl'
-require 'ca_config'
-require 'getopts'
+require './ca_config'
 
 include OpenSSL
 
@@ -49,7 +48,7 @@ ARGV.each do |file|
   puts "+ Serial ##{re.serial} - revoked at #{re.time}"
 end
 
-crl.sign(ca_keypair, Digest::SHA1.new)
+crl.sign(ca_keypair, OpenSSL::Digest::SHA1.new)
 
 puts "Writing #{CAConfig::CRL_FILE}."
 File.open(CAConfig::CRL_FILE, "w") do |f|

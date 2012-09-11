@@ -30,6 +30,7 @@ class HostNoReplay
         pubkey = Marshal.load(sock)
         pubsig = Marshal.load(sock)
         source = Marshal.load(sock)
+        p [:request, source]
         sourcesig = Marshal.load(sock)
         sock.close_read
         # verify

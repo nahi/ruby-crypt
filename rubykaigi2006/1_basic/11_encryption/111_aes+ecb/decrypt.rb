@@ -1,7 +1,7 @@
 require 'openssl'
 
 # load SECRET key
-key = File.read("seckey.bin")
+key = File.binread("seckey.bin")
 
 # create AES engine
 cipher = OpenSSL::Cipher::Cipher.new("AES-128-ECB")

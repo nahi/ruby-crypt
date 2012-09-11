@@ -5,13 +5,11 @@ require '../marshallablersakey'
 
 class HostMasterControl
   def initialize
-    @masterpubkey = OpenSSL::PKey::RSA.new(
-      File.read("masterpubkey.pem"))
+    @masterpubkey = OpenSSL::PKey::RSA.new(File.read("masterpubkey.pem"))
     @digester = OpenSSL::Digest::SHA256.new
 
     @logger = Logger.new(STDERR)
-    @server = WEBrick::GenericServer.new(
-      :Port => 1234, :Logger => @logger)
+    @server = WEBrick::GenericServer.new(:Port => 1234, :Logger => @logger)
   end
 
   def start

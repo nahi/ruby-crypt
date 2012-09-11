@@ -4,10 +4,17 @@ CLEAN.include('*.pem')
 CLEAN.include('../proxy/pubkey.pem.sig')
 CLEAN.include('nglist.txt')
 
-task :default => ['masterprivkey.pem', '../proxy/pubkey.pem.sig', 'nglist.txt']
+task :default => ['masterprivkey.pem', '../proxy/pubkey.pem.sig', 'nglist_listed.txt', 'nglist.txt']
 
 file 'nglist.txt' do
   File.open('nglist.txt', 'w') {}
+end
+
+file 'nglist_listed.txt' do
+  require 'openssl'
+  File.open('nglist_listed.txt', 'w') do |f|
+    f.puts(OpenSSL::PKey.read(File.read("../proxy/pubkey.pem")).n.to_s)
+  end
 end
 
 file 'masterprivkey.pem' do

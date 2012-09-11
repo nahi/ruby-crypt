@@ -1,12 +1,11 @@
 require 'openssl'
 
 # load PUBLIC key
-pubkey =
-  OpenSSL::PKey::DSA.new(File.read("pubkey.pem"))
+pubkey = OpenSSL::PKey::DSA.new(File.read("pubkey.pem"))
 
 # load text and sig
-plain = File.read("plain.txt")
-sig = File.read("plain.sig.bin")
+plain = File.binread("../alice_sign/plain.txt")
+sig = File.binread("../alice_sign/plain.sig.bin")
 
 # verify
 if pubkey.verify(OpenSSL::Digest::DSS1.new, sig, plain)
