@@ -5,11 +5,11 @@ class KMSEncryptor
 
   def initialize(region, key_id)
     @region, @key_id = region, key_id
+    @kms = Aws::KMS::Client.new(region: @region)
   end
 
   def generate_data_key
-    kms = Aws::KMS::Client.new(region: @region)
-    resp = kms.generate_data_key_without_plaintext(
+    resp = @kms.generate_data_key_without_plaintext(
       key_id: @key_id,
       encryption_context: CTX,
       key_spec: 'AES_128'
@@ -18,10 +18,9 @@ class KMSEncryptor
   end
 
   def with_key(wrapped_key)
-    kms = Aws::KMS::Client.new(region: @region)
     key = nil
     begin
-      key = kms.decrypt(
+      key = @kms.decrypt(
         ciphertext_blob: wrapped_key,
         encryption_context: CTX
       ).plaintext
@@ -34,7 +33,7 @@ class KMSEncryptor
 
   def encrypt(wrapped_key, plaintext)
     with_key(wrapped_key) do |key|
-      cipher = OpenSSL::Cipher::Cipher.new("aes-128-gcm")
+      cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
       iv = OpenSSL::Random.random_bytes(16)
       cipher.encrypt
       cipher.key = key
@@ -47,7 +46,7 @@ class KMSEncryptor
   def decrypt(wrapped_key, ciphertext)
     with_key(wrapped_key) do |key|
       iv, auth_tag, data = ciphertext.unpack('a16a16a*')
-      cipher = OpenSSL::Cipher::Cipher.new("aes-128-gcm")
+      cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
       cipher.decrypt
       cipher.key = key
       cipher.iv = iv
