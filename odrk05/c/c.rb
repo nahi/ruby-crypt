@@ -9,9 +9,9 @@ server = WEBrick::HTTPServer.new(
   Port: 17443,
   DocumentRoot: '/dev/null',
   SSLEnable: true,
-  SSLCACertificateFile: 'ca-chain.cert',
-  SSLCertificate: OpenSSL::X509::Certificate.new(File.read('server.cert')),
-  SSLPrivateKey: OpenSSL::PKey::RSA.new(File.read('server.key')),
+  SSLCACertificateFile: 'cert/ca-chain.cert',
+  SSLCertificate: OpenSSL::X509::Certificate.new(File.read('cert/server.cert')),
+  SSLPrivateKey: OpenSSL::PKey::RSA.new(File.read('cert/server.key')),
 )
 basic_auth = WEBrick::HTTPAuth::BasicAuth.new(
   Logger: logger,

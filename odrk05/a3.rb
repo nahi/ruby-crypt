@@ -1,31 +1,46 @@
-require 'net/https'
+require 'webrick/https'
+require 'logger'
 
-class NetHTTPClient < Net::HTTP
-  require 'httpclient'
+logger = Logger.new(STDERR)
 
-  def do_start
-    # verify callback that dumps certificates
-    if $DEBUG && @use_ssl
-      self.verify_callback = HTTPClient::SSLConfig.new(nil).method(:default_verify_callback)
-    end
-    super
-  end
-
-  def on_connect
-    if $DEBUG && @use_ssl
-      ssl_socket = @socket.io
-      if ssl_socket.respond_to?(:ssl_version)
-        warn("Protocol version: #{ssl_socket.ssl_version}")
-      end
-      warn("Cipher: #{ssl_socket.cipher.inspect}")
-      warn("State: #{ssl_socket.state}")
-    end
-  end
+server = WEBrick::HTTPServer.new(
+  BindAddress: "localhost",
+  Logger: logger,
+  Port: 17443,
+  DocumentRoot: '/dev/null',
+  SSLEnable: true,
+  SSLCACertificateFile: 'cert/ca-chain.cert',
+  SSLCertificate: OpenSSL::X509::Certificate.new(File.read('cert/server.cert')),
+  SSLPrivateKey: OpenSSL::PKey::RSA.new(File.read('cert/server.key')),
+)
+server.ssl_context.ssl_version = :TLSv1
+server.mount("/hello",
+  WEBrick::HTTPServlet::ProcHandler.new(->(req, res) {
+    res['content-type'] = 'text/plain'
+    res.body = "hello"
+  })
+)
+trap(:INT) do
+  server.shutdown
 end
 
-client = NetHTTPClient.new("www.ruby-lang.org", 443)
-client.use_ssl = true
-client.cert_store = store = OpenSSL::X509::Store.new
-store.set_default_paths
+t = Thread.new {
+  Thread.current.abort_on_exception = true
+  server.start
+}
+while server.status != :Running
+  sleep 0.1
+  raise unless t.alive?
+end
+puts $$
 
-client.get("/")
+require 'httpclient'
+client = HTTPClient.new
+client.ssl_config.add_trust_ca('cert/ca.cert')
+client.ssl_config.ssl_version = :TLSv1_2
+client.get("https://localhost:17443/").status
+
+=begin
+% ruby a3.rb
+SSL_connect returned=1 errno=0 state=SSLv3 read server hello A: wrong version number (OpenSSL::SSL::SSLError)
+=end
