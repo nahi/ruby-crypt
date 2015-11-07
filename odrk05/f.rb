@@ -1,59 +1,70 @@
 require 'aws-sdk'
 
-DEMO_CTX = {
-  'purpose' => 'odrk05 demonstration'
-}
+class KMSEncryptor
+  CTX = { 'purpose' => 'odrk05 demonstration' }
 
-def erase_key(key)
-  # TODO: confirm that key is deleted from memory
-  key.tr!("\0-\xff".force_encoding('BINARY'), "\0")
-end
+  def initialize(key_id)
+    @key_id = key_id
+  end
 
-def encrypt(key_id, plaintext)
-  # Create wrapping AES key
-  kms = Aws::KMS::Client.new(region: 'us-east-1')
-  resp = kms.generate_data_key(
-    key_id: key_id,
-    encryption_context: DEMO_CTX,
-    key_spec: 'AES_128'
-  )
-  key = resp.plaintext
-  wrapped_key = resp.ciphertext_blob
+  def generate_data_key
+    kms = Aws::KMS::Client.new(region: 'us-east-1')
+    resp = kms.generate_data_key_without_plaintext(
+      key_id: @key_id,
+      encryption_context: CTX,
+      key_spec: 'AES_128'
+    )
+    resp.ciphertext_blob
+  end
 
-  cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
-  iv = OpenSSL::Random.random_bytes(16)
-  cipher.encrypt
-  cipher.key = key
-  cipher.iv = iv
-  ciphertext = iv + cipher.update(plaintext) + cipher.final
-  erase_key(key)
-  return wrapped_key, ciphertext
-end
+  def with_key(wrapped_key)
+    kms = Aws::KMS::Client.new(region: 'us-east-1')
+    key = nil
+    begin
+      key = kms.decrypt(
+        ciphertext_blob: wrapped_key,
+        encryption_context: CTX
+      ).plaintext
+      yield key
+    ensure
+      # TODO: confirm that key is deleted from memory
+      key.tr!("\0-\xff".force_encoding('BINARY'), "\0")
+    end
+  end
 
-def decrypt(wrapped_key, ciphertext)
-  kms = Aws::KMS::Client.new(region: 'us-east-1')
-  resp = kms.decrypt(
-    ciphertext_blob: wrapped_key,
-    encryption_context: DEMO_CTX
-  )
-  key = resp.plaintext
+  def encrypt(wrapped_key, plaintext)
+    with_key(wrapped_key) do |key|
+      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
+      iv = OpenSSL::Random.random_bytes(16)
+      cipher.encrypt
+      cipher.key = key
+      cipher.iv = iv
+      iv + cipher.update(plaintext) + cipher.final
+    end
+  end
 
-  iv, data = ciphertext.unpack('a16a*')
-  cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
-  cipher.decrypt
-  cipher.key = key
-  cipher.iv = iv
-
-  plaintext = cipher.update(data) + cipher.final
-  erase_key(key)
-  plaintext
+  def decrypt(wrapped_key, ciphertext)
+    with_key(wrapped_key) do |key|
+      iv, data = ciphertext.unpack('a16a*')
+      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
+      cipher.decrypt
+      cipher.key = key
+      cipher.iv = iv
+      cipher.update(data) + cipher.final
+    end
+  end
 end
 
 key_id = 'alias/nahi-test'
+encryptor = KMSEncryptor.new(key_id)
+
+# generate key for each data, customer, or something
+wrapped_key = encryptor.generate_data_key
+
 plaintext = File.read(__FILE__)
 
-wrapped_key, ciphertext = encrypt(key_id, plaintext)
+ciphertext = encryptor.encrypt(wrapped_key, plaintext)
 # save wrapped_key and ciphertext in DB, File or somewhere
 
 # restore wrapped_key and ciphertext from DB, File or somewhere
-puts decrypt(wrapped_key, ciphertext)
+puts encryptor.decrypt(wrapped_key, ciphertext)
