@@ -3,12 +3,12 @@ require 'aws-sdk'
 class KMSEncryptor
   CTX = { 'purpose' => 'odrk05 demonstration' }
 
-  def initialize(key_id)
-    @key_id = key_id
+  def initialize(region, key_id)
+    @region, @key_id = region, key_id
   end
 
   def generate_data_key
-    kms = Aws::KMS::Client.new(region: 'us-east-1')
+    kms = Aws::KMS::Client.new(region: @region)
     resp = kms.generate_data_key_without_plaintext(
       key_id: @key_id,
       encryption_context: CTX,
@@ -18,7 +18,7 @@ class KMSEncryptor
   end
 
   def with_key(wrapped_key)
-    kms = Aws::KMS::Client.new(region: 'us-east-1')
+    kms = Aws::KMS::Client.new(region: @region)
     key = nil
     begin
       key = kms.decrypt(
@@ -55,8 +55,9 @@ class KMSEncryptor
   end
 end
 
-key_id = 'alias/nahi-test'
-encryptor = KMSEncryptor.new(key_id)
+region = 'ap-northeast-1'
+key_id = 'alias/nahi-test-tokyo'
+encryptor = KMSEncryptor.new(region, key_id)
 
 # generate key for each data, customer, or something
 wrapped_key = encryptor.generate_data_key
