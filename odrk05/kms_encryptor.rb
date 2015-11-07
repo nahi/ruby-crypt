@@ -34,7 +34,7 @@ class KMSEncryptor
 
   def encrypt(wrapped_key, plaintext)
     with_key(wrapped_key) do |key|
-      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
+      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CTR")
       iv = OpenSSL::Random.random_bytes(16)
       cipher.encrypt
       cipher.key = key
@@ -46,7 +46,7 @@ class KMSEncryptor
   def decrypt(wrapped_key, ciphertext)
     with_key(wrapped_key) do |key|
       iv, data = ciphertext.unpack('a16a*')
-      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CBC")
+      cipher = OpenSSL::Cipher::Cipher.new("AES-128-CTR")
       cipher.decrypt
       cipher.key = key
       cipher.iv = iv
