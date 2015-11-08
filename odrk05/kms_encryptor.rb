@@ -2,6 +2,8 @@ require 'aws-sdk'
 
 class KMSEncryptor
   CTX = { 'purpose' => 'odrk05 demonstration' }
+  GCM_IV_SIZE = 12
+  GCM_TAG_SIZE = 16
 
   def initialize(region, key_id)
     @region, @key_id = region, key_id
@@ -34,7 +36,7 @@ class KMSEncryptor
   def encrypt(wrapped_key, plaintext)
     with_key(wrapped_key) do |key|
       cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
-      iv = OpenSSL::Random.random_bytes(12)
+      iv = OpenSSL::Random.random_bytes(GCM_IV_SIZE)
       cipher.encrypt
       cipher.key = key
       cipher.iv = iv
@@ -45,8 +47,8 @@ class KMSEncryptor
 
   def decrypt(wrapped_key, ciphertext)
     with_key(wrapped_key) do |key|
-      iv, data = ciphertext.unpack('a12a*')
-      auth_tag = data.slice!(data.bytesize - 16, 16)
+      iv, data = ciphertext.unpack("a#{GCM_IV_SIZE}a*")
+      auth_tag = data.slice!(data.bytesize - GCM_TAG_SIZE, GCM_TAG_SIZE)
       cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
       cipher.decrypt
       cipher.key = key
@@ -69,8 +71,8 @@ if defined?(JRuby)
     def encrypt(wrapped_key, plaintext)
       with_key(wrapped_key) do |key|
         cipher = Cipher.getInstance('AES/GCM/PKCS5Padding')
-        iv = OpenSSL::Random.random_bytes(12)
-        spec = GCMParameterSpec.new(16 * 8, iv.to_java_bytes)
+        iv = OpenSSL::Random.random_bytes(GCM_IV_SIZE)
+        spec = GCMParameterSpec.new(GCM_TAG_SIZE * 8, iv.to_java_bytes)
         cipher.init(1, SecretKeySpec.new(key.to_java_bytes, 0, key.bytesize, 'AES'), spec)
         ciphertext = String.from_java_bytes(cipher.doFinal(plaintext.to_java_bytes), Encoding::BINARY)
         iv + ciphertext
@@ -81,8 +83,8 @@ if defined?(JRuby)
     def decrypt(wrapped_key, ciphertext)
       with_key(wrapped_key) do |key|
         cipher = Cipher.getInstance('AES/GCM/PKCS5Padding')
-        iv, data = ciphertext.unpack('a12a*')
-        spec = GCMParameterSpec.new(16 * 8, iv.to_java_bytes)
+        iv, data = ciphertext.unpack("a#{GCM_IV_SIZE}a*")
+        spec = GCMParameterSpec.new(GCM_TAG_SIZE * 8, iv.to_java_bytes)
         cipher.init(2, SecretKeySpec.new(key.to_java_bytes, 0, key.bytesize, 'AES'), spec)
         String.from_java_bytes(cipher.doFinal(data.to_java_bytes), Encoding::BINARY)
       end
