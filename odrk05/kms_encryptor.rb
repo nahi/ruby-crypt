@@ -34,24 +34,58 @@ class KMSEncryptor
   def encrypt(wrapped_key, plaintext)
     with_key(wrapped_key) do |key|
       cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
-      iv = OpenSSL::Random.random_bytes(16)
+      iv = OpenSSL::Random.random_bytes(12)
       cipher.encrypt
       cipher.key = key
       cipher.iv = iv
       ciphertext = cipher.update(plaintext) + cipher.final
-      iv + cipher.auth_tag + ciphertext
+      iv + ciphertext + cipher.auth_tag
     end
   end
 
   def decrypt(wrapped_key, ciphertext)
     with_key(wrapped_key) do |key|
-      iv, auth_tag, data = ciphertext.unpack('a16a16a*')
+      iv, data = ciphertext.unpack('a12a*')
+      auth_tag = data.slice!(data.bytesize - 16, 16)
       cipher = OpenSSL::Cipher::Cipher.new('aes-128-gcm')
       cipher.decrypt
       cipher.key = key
       cipher.iv = iv
       cipher.auth_tag = auth_tag
       cipher.update(data) + cipher.final
+    end
+  end
+end
+
+if defined?(JRuby)
+  require 'java'
+  java_import 'javax.crypto.Cipher'
+  java_import 'javax.crypto.SecretKey'
+  java_import 'javax.crypto.spec.SecretKeySpec'
+  java_import 'javax.crypto.spec.GCMParameterSpec'
+
+  class KMSEncryptor
+    # Overrides
+    def encrypt(wrapped_key, plaintext)
+      with_key(wrapped_key) do |key|
+        cipher = Cipher.getInstance('AES/GCM/PKCS5Padding')
+        iv = OpenSSL::Random.random_bytes(12)
+        spec = GCMParameterSpec.new(16 * 8, iv.to_java_bytes)
+        cipher.init(1, SecretKeySpec.new(key.to_java_bytes, 0, key.bytesize, 'AES'), spec)
+        ciphertext = String.from_java_bytes(cipher.doFinal(plaintext.to_java_bytes), Encoding::BINARY)
+        iv + ciphertext
+      end
+    end
+
+    # Overrides
+    def decrypt(wrapped_key, ciphertext)
+      with_key(wrapped_key) do |key|
+        cipher = Cipher.getInstance('AES/GCM/PKCS5Padding')
+        iv, data = ciphertext.unpack('a12a*')
+        spec = GCMParameterSpec.new(16 * 8, iv.to_java_bytes)
+        cipher.init(2, SecretKeySpec.new(key.to_java_bytes, 0, key.bytesize, 'AES'), spec)
+        String.from_java_bytes(cipher.doFinal(data.to_java_bytes), Encoding::BINARY)
+      end
     end
   end
 end
